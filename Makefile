@@ -7,7 +7,7 @@ test:
 
 .PHONY: bin
 bin: fmt vet
-	go build -o bin/kata github.com/github/kubectl-kata/cmd/plugin
+	go build -o bin/kata github.com/Tim-0731-Hzt/kubectl-kata/cmd/plugin
 
 .PHONY: fmt
 fmt:
