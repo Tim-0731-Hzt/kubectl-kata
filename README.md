@@ -14,3 +14,9 @@ kubectl kata
 ```
 kubectl kata deploy
 ```
+
+### Enter the vm
+
+```
+kubectl kata exec -p POD_NAME -n NAMESPACE
+```

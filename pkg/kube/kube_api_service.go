@@ -3,6 +3,7 @@ package kube
 import (
 	"context"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	apps_v1 "k8s.io/api/apps/v1"
 	api_v1 "k8s.io/api/core/v1"
@@ -13,6 +14,10 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
+	utilexec "k8s.io/client-go/util/exec"
+	"k8s.io/kubectl/pkg/scheme"
+	"os"
 	"time"
 )
 
@@ -47,6 +52,75 @@ func NewKubernetesApiServiceImpl() (k *KubernetesApiServiceImpl, err error) {
 	return k, nil
 }
 
+func (k *KubernetesApiServiceImpl) GetPod(ctx context.Context, podName string, namespace string) (*api_v1.Pod, error) {
+	return k.clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
+}
+
+func (k *KubernetesApiServiceImpl) GetKataDeployPod(p *api_v1.Pod) (*api_v1.Pod, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: "name=kata-deploy",
+	}
+	pods, err := k.clientset.CoreV1().Pods("kube-system").List(context.TODO(), listOptions)
+	if err != nil {
+		return nil, err
+	}
+	for _, pod := range pods.Items {
+		if pod.Spec.NodeName == p.Spec.NodeName {
+			return &pod, nil
+		}
+	}
+	return nil, err
+}
+
+func (k *KubernetesApiServiceImpl) ExecuteVMCommand(req ExecCommandRequest) (int, error) {
+	execRequest := k.clientset.CoreV1().RESTClient().Post().Resource("pods").Name(req.PodName).Namespace(req.Namespace).SubResource("exec")
+	execRequest.VersionedParams(&api_v1.PodExecOptions{
+		Container: req.Container,
+		Command:   req.Command,
+		Stdin:     true,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       true,
+	}, scheme.ParameterCodec)
+	exec, err := remotecommand.NewSPDYExecutor(k.restConfig, "POST", execRequest.URL())
+	if err != nil {
+		return 0, nil
+	}
+	if !terminal.IsTerminal(0) || !terminal.IsTerminal(1) {
+		return 0, err
+	}
+	oldState, err := terminal.MakeRaw(0)
+	if err != nil {
+		return 1, err
+	}
+	defer func(fd int, oldState *terminal.State) error {
+		err := terminal.Restore(fd, oldState)
+		if err != nil {
+			return err
+		}
+		return nil
+	}(0, oldState)
+
+	// 用IO读写替换 os stdout
+	screen := struct {
+		io.Reader
+		io.Writer
+	}{os.Stdin, os.Stdout}
+	err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
+		Stdin:  screen,
+		Stdout: screen,
+		Stderr: screen,
+		Tty:    false,
+	})
+	var exitCode = 0
+	if err != nil {
+		if exitErr, ok := err.(utilexec.ExitError); ok && exitErr.Exited() {
+			exitCode = exitErr.ExitStatus()
+			return 1, nil
+		}
+	}
+	return exitCode, nil
+}
 func (k *KubernetesApiServiceImpl) CreateRbac(ctx context.Context, serviceAccount *api_v1.ServiceAccount, clusterRole *rbac.ClusterRole, clusterRoleBinding *rbac.ClusterRoleBinding) error {
 	_, err := k.clientset.CoreV1().ServiceAccounts("kube-system").Create(ctx, serviceAccount, metav1.CreateOptions{})
 	if err != nil {
