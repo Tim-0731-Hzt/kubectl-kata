@@ -9,7 +9,7 @@ spec:
       matchLabels:
         os: linux
         arch: amd64
-    uri: https://github.com/github/kubectl-kata/releases/download/v0.1.0/kata_linux_amd64.tar.gz
+    uri: https://github.com/Tim-0731-Hzt/kubectl-kata/releases/download/v0.1.0/kata_linux_amd64.tar.gz
     sha256: ""
     files:
     - from: "./kata"
@@ -21,7 +21,7 @@ spec:
       matchLabels:
         os: darwin
         arch: amd64
-    uri: https://github.com/github/kubectl-kata/releases/download/v0.1.0/kata_darwin_amd64.tar.gz
+    uri: https://github.com/Tim-0731-Hzt/kubectl-kata/releases/download/v0.1.0/kata_darwin_amd64.tar.gz
     sha256: ""
     files:
     - from: "./kata"
@@ -33,7 +33,7 @@ spec:
       matchLabels:
         os: windows
         arch: amd64
-    uri: https://github.com/github/kubectl-kata/releases/download/v0.1.0/kata_windows_amd64.zip
+    uri: https://github.com/Tim-0731-Hzt/kubectl-kata/releases/download/v0.1.0/kata_windows_amd64.zip
     sha256: ""
     files:
     - from: "/kata.exe"
@@ -42,14 +42,14 @@ spec:
       to: "."
     bin: "kata.exe"
   shortDescription: A new plugin
-  homepage: https://github.com/github/kubectl-kata
+  homepage: https://github.com/Tim-0731-Hzt/kubectl-kata
   caveats: |
     Usage:
       $ kubectl kata
 
     For additional options:
       $ kubectl kata --help
-      or https://github.com/github/kubectl-kata/blob/v0.1.0/doc/USAGE.md
+      or https://github.com/Tim-0731-Hzt/kubectl-kata/blob/v0.1.0/doc/USAGE.md
 
   description: |
     This is a new plugin

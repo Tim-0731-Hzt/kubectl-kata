@@ -1,7 +1,7 @@
 project_name: kata
 release:
   github:
-    owner: github
+    owner: Tim-0731-Hzt
     name: kubectl-kata
 builds:
   - id: kata
@@ -17,7 +17,7 @@ builds:
       - GO111MODULE=on
     main: cmd/plugin/main.go
     ldflags: -s -w
-      -X github.com/github/kubectl-kata/pkg/version.version=
+      -X github.com/Tim-0731-Hzt/kubectl-kata/pkg/version.version=
 archives:
   - id: kata
     builds:
