@@ -61,5 +61,6 @@ func (d *DeployService) Run() error {
 	if err := d.kubeService.CreateRuntimeClass(ctx, DragonballRuntimeClass); err != nil {
 		return err
 	}
+	log.Infof("ready to go now")
 	return nil
 }

@@ -9,7 +9,7 @@ func init() {
 	d := plugin.NewDeleteService()
 	var deleteCmd = &cobra.Command{
 		Use:   "delete",
-		Short: "delete kata containers on each node",
+		Short: "delete kata-containers on each node",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := d.Complete(cmd, args)
 			if err != nil {

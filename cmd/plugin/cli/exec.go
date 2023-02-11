@@ -11,7 +11,8 @@ import (
 func init() {
 	e := plugin.NewExecService()
 	var execCmd = &cobra.Command{
-		Use: "exec",
+		Use:   "exec",
+		Short: "enter the VM of kata-containers",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("exec called")
 			err := e.Complete(cmd, args)

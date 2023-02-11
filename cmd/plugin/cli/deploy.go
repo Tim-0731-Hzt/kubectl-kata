@@ -8,7 +8,7 @@ import (
 func init() {
 	var deployCmd = &cobra.Command{
 		Use:   "deploy",
-		Short: "deploy kata containers on each node",
+		Short: "deploy kata-containers on each node",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			d := plugin.NewDeployService()
 			if err := d.Complete(cmd, args); err != nil {
