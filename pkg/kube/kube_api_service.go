@@ -208,3 +208,55 @@ func (k *KubernetesApiServiceImpl) CreateRuntimeClass(ctx context.Context, d *no
 	}
 	return nil
 }
+
+func (k *KubernetesApiServiceImpl) DeleteDaemonSet(ctx context.Context, d string, namespace string) error {
+	err := k.clientset.AppsV1().DaemonSets(namespace).Delete(ctx, d, metav1.DeleteOptions{})
+	if err != nil {
+		if k_error.IsNotFound(err) {
+			log.Warnf(err.Error())
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k *KubernetesApiServiceImpl) DeleteRbac() error {
+	err := k.clientset.CoreV1().ServiceAccounts("kube-system").Delete(context.TODO(), "kata-label-node", metav1.DeleteOptions{})
+	if err != nil {
+		if k_error.IsNotFound(err) {
+			log.Warnf(err.Error())
+		} else {
+			return err
+		}
+	}
+	err = k.clientset.RbacV1().ClusterRoles().Delete(context.TODO(), "node-labeler", metav1.DeleteOptions{})
+	if err != nil {
+		if k_error.IsNotFound(err) {
+			log.Warnf(err.Error())
+		} else {
+			return err
+		}
+	}
+	err = k.clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), "kata-label-node-rb", metav1.DeleteOptions{})
+	if err != nil {
+		if k_error.IsNotFound(err) {
+			log.Warnf(err.Error())
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k *KubernetesApiServiceImpl) DeleteRuntimeClass(s string) error {
+	err := k.clientset.NodeV1().RuntimeClasses().Delete(context.TODO(), s, metav1.DeleteOptions{})
+	if err != nil {
+		if k_error.IsNotFound(err) {
+			log.Warnf(err.Error())
+		} else {
+			return err
+		}
+	}
+	return nil
+}
