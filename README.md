@@ -15,6 +15,12 @@ kubectl kata
 kubectl kata deploy
 ```
 
+### Config debug console
+
+```
+kubectl kata config --debug_console=true
+```
+
 ### Enter the vm
 
 ```
