@@ -72,6 +72,44 @@ func (k *KubernetesApiServiceImpl) GetKataDeployPod(p *api_v1.Pod) (*api_v1.Pod,
 	return nil, err
 }
 
+func (k *KubernetesApiServiceImpl) GetKataDeployPods(labelSelector string, namespace string) ([]api_v1.Pod, error) {
+	listOptions := metav1.ListOptions{
+		LabelSelector: labelSelector,
+	}
+	pods, err := k.clientset.CoreV1().Pods(namespace).List(context.TODO(), listOptions)
+	if err != nil {
+		return nil, err
+	}
+	return pods.Items, nil
+}
+
+func (k *KubernetesApiServiceImpl) ExecuteCommand(req ExecCommandRequest) (int, error) {
+	execRequest := k.clientset.CoreV1().RESTClient().Post().Resource("pods").Name(req.PodName).Namespace(req.Namespace).SubResource("exec")
+	execRequest.VersionedParams(&api_v1.PodExecOptions{
+		Container: req.Container,
+		Command:   req.Command,
+		Stdin:     req.StdIn != nil,
+		Stdout:    req.StdOut != nil,
+		TTY:       false,
+	}, scheme.ParameterCodec)
+	exec, err := remotecommand.NewSPDYExecutor(k.restConfig, "POST", execRequest.URL())
+	if err != nil {
+		return 0, nil
+	}
+	err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
+		Stdout: req.StdOut,
+		Tty:    false,
+	})
+	var exitCode = 0
+	if err != nil {
+		if exitErr, ok := err.(utilexec.ExitError); ok && exitErr.Exited() {
+			exitCode = exitErr.ExitStatus()
+			return 1, err
+		}
+	}
+	return exitCode, nil
+}
+
 func (k *KubernetesApiServiceImpl) ExecuteVMCommand(req ExecCommandRequest) (int, error) {
 	execRequest := k.clientset.CoreV1().RESTClient().Post().Resource("pods").Name(req.PodName).Namespace(req.Namespace).SubResource("exec")
 	execRequest.VersionedParams(&api_v1.PodExecOptions{
@@ -101,7 +139,6 @@ func (k *KubernetesApiServiceImpl) ExecuteVMCommand(req ExecCommandRequest) (int
 		return nil
 	}(0, oldState)
 
-	// 用IO读写替换 os stdout
 	screen := struct {
 		io.Reader
 		io.Writer
